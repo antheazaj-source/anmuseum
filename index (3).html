@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>有间博物馆 · 讲解点名</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Noto Serif SC',-apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif;background:#f5f5f3;min-height:100dvh;color:#1a1a1a}
+
+/* ── SCREEN SYSTEM ── */
+.screen{display:none;min-height:100dvh;flex-direction:column}
+.screen.active{display:flex}
+.wrap{max-width:560px;margin:0 auto;width:100%;padding:0 14px}
+
+/* ── SHARED ── */
+.page-head{padding:20px 14px 14px;max-width:560px;margin:0 auto;width:100%}
+.page-title{font-size:18px;font-weight:600;color:#1a1a1a}
+.page-sub{font-size:12px;color:#999;margin-top:2px}
+.back-link{font-size:13px;color:#888;background:none;border:none;cursor:pointer;padding:0 0 10px;display:block;text-align:left}
+
+.card-box{background:#fff;border:0.5px solid #e0e0de;border-radius:12px;padding:14px;margin-bottom:10px}
+.field-label{font-size:11px;color:#999;font-weight:500;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px}
+.field-input{width:100%;border:0.5px solid #ddd;border-radius:8px;padding:10px 12px;font-size:15px;font-family:inherit;color:#1a1a1a;background:#f9f9f8;outline:none;transition:border-color .15s}
+.field-input:focus{border-color:#1D9E75}
+.field-input::placeholder{color:#bbb}
+
+.btn-primary{width:100%;padding:13px;border-radius:10px;border:none;background:#1a1a1a;color:#fff;font-size:15px;font-weight:500;font-family:inherit;cursor:pointer;transition:opacity .15s}
+.btn-primary:active{opacity:.82}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed}
+.btn-secondary{width:100%;padding:12px;border-radius:10px;border:0.5px solid #ddd;background:#fff;color:#1a1a1a;font-size:14px;font-weight:400;font-family:inherit;cursor:pointer;margin-top:8px}
+.btn-green{background:#1D9E75 !important;color:#fff !important;border:none}
+.btn-red{background:#C0392B !important;color:#fff !important;border:none}
+
+/* ── LOGIN ── */
+#screen-login{background:#fff;justify-content:center;align-items:center;padding:40px 24px}
+.login-icon{font-size:48px;margin-bottom:16px;text-align:center}
+.login-title{font-size:22px;font-weight:600;text-align:center;margin-bottom:6px}
+.login-sub{font-size:13px;color:#999;text-align:center;margin-bottom:32px}
+.login-form{width:100%;max-width:340px}
+.login-name-input{width:100%;border:0.5px solid #ddd;border-radius:10px;padding:14px 16px;font-size:17px;font-family:inherit;color:#1a1a1a;background:#f9f9f8;outline:none;text-align:center;margin-bottom:14px;transition:border-color .15s}
+.login-name-input:focus{border-color:#1D9E75}
+.login-name-input::placeholder{color:#ccc}
+
+/* ── DASHBOARD ── */
+#screen-dashboard{background:#f5f5f3}
+.dash-head{background:#fff;padding:20px 14px 16px;border-bottom:0.5px solid #eee;margin-bottom:14px}
+.dash-greeting{font-size:13px;color:#999;margin-bottom:2px}
+.dash-name{font-size:20px;font-weight:600;color:#1a1a1a}
+.dash-date{font-size:12px;color:#bbb;margin-top:2px}
+
+.session-card{background:#fff;border:0.5px solid #e0e0de;border-radius:12px;padding:13px 14px;margin-bottom:8px;cursor:pointer;transition:border-color .15s;position:relative}
+.session-card:active{border-color:#ccc;background:#fafafa}
+.sc-time{font-size:12px;color:#999;margin-bottom:4px;display:flex;align-items:center;gap:6px}
+.sc-time-badge{background:#1a1a1a;color:#fff;font-size:11px;font-weight:500;padding:2px 8px;border-radius:4px}
+.sc-name{font-size:15px;font-weight:500;color:#1a1a1a;margin-bottom:5px}
+.sc-meta{font-size:12px;color:#aaa;display:flex;gap:8px;flex-wrap:wrap}
+.sc-status{position:absolute;top:13px;right:14px;font-size:11px;padding:3px 8px;border-radius:20px}
+.sc-status.pending{background:#f0f0ee;color:#aaa}
+.sc-status.active{background:#E1F5EE;color:#0F6E56}
+.sc-status.done{background:#ebebea;color:#888}
+.sc-progress{height:2px;background:#eee;border-radius:1px;margin-top:10px;overflow:hidden}
+.sc-progress-fill{height:100%;background:#1D9E75;border-radius:1px;transition:width .3s}
+
+.add-session-btn{width:100%;padding:13px;border-radius:12px;border:0.5px dashed #ccc;background:transparent;color:#888;font-size:14px;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:10px}
+
+/* ── SESSION SETUP ── */
+.time-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.type-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:2px}
+.type-chip{padding:6px 14px;border-radius:20px;border:0.5px solid #ddd;font-size:12px;font-family:inherit;background:#fff;color:#888;cursor:pointer;transition:all .13s}
+.type-chip.sel{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
+
+/* ── UPLOAD ── */
+.img-drop{border:0.5px dashed #ccc;border-radius:8px;background:#f9f9f8;min-height:86px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;position:relative;overflow:hidden;transition:border-color .15s}
+.img-drop:hover{border-color:#1D9E75}
+.img-drop input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.img-placeholder{display:flex;flex-direction:column;align-items:center;gap:4px;pointer-events:none}
+.img-drop-icon{font-size:20px}
+.img-drop-lbl{font-size:12px;color:#aaa}
+.img-preview{width:100%;max-height:160px;object-fit:contain;border-radius:6px;display:none}
+.img-clear{position:absolute;top:6px;right:6px;background:rgba(0,0,0,.45);color:#fff;border:none;border-radius:50%;width:22px;height:22px;font-size:12px;cursor:pointer;display:none;align-items:center;justify-content:center}
+.divider-or{display:flex;align-items:center;gap:8px;margin:10px 0;font-size:11px;color:#ccc}
+.divider-or::before,.divider-or::after{content:'';flex:1;height:0.5px;background:#e8e8e8}
+.upload-textarea{width:100%;min-height:80px;border:0.5px solid #ddd;border-radius:8px;padding:10px;font-size:13px;font-family:inherit;color:#1a1a1a;background:#f9f9f8;resize:none;outline:none;line-height:1.7}
+.upload-textarea:focus{border-color:#1D9E75}
+.upload-textarea::placeholder{color:#ccc}
+.btn-ai{width:100%;padding:11px;border-radius:8px;border:0.5px solid #1D9E75;background:#E1F5EE;color:#0F6E56;cursor:pointer;font-weight:500;font-size:13px;font-family:inherit;margin-top:10px}
+.btn-ai:disabled{opacity:.5;cursor:not-allowed}
+.ai-status{font-size:12px;color:#999;text-align:center;padding:8px 0;min-height:26px}
+.confirm-list{background:#fff;border:0.5px solid #e0e0de;border-radius:12px;padding:4px 0;margin-bottom:12px}
+.confirm-row{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:0.5px solid #eee}
+.confirm-row:last-child{border-bottom:none}
+.cr-name{flex:1;font-size:13px;font-weight:500;color:#1a1a1a}
+.cr-count{font-size:15px;font-weight:500;color:#1a1a1a;min-width:30px;text-align:right}
+
+/* ── CHECKIN ── */
+.info-bar{display:flex;gap:12px;flex-wrap:wrap;padding:9px 12px;background:#fff;border-bottom:0.5px solid #eee;font-size:12px;color:#666}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:10px 14px;background:#f5f5f3;border-bottom:0.5px solid #eee;max-width:560px;margin:0 auto;width:100%}
+.stat{background:#fff;border:0.5px solid #eee;border-radius:8px;padding:8px 4px;text-align:center}
+.stat-n{font-size:20px;font-weight:500;line-height:1}
+.stat-l{font-size:10px;color:#aaa;margin-top:3px}
+.checkin-body{flex:1;overflow-y:auto;padding:10px 14px 100px;max-width:560px;margin:0 auto;width:100%}
+
+/* GROUP CARDS */
+.card{border:0.5px solid #e0e0de;border-radius:12px;margin-bottom:8px;overflow:hidden;transition:background .18s,border-color .18s}
+.card.st-pending{background:#fff;border-color:#e0e0de}
+.card.st-arrived{background:#ECF7F3;border-color:#9FE1CB}
+.card.st-late   {background:#FEEDE8;border-color:#F5C4B3}
+.card.st-absent {background:#FFFBE8;border-color:#F0CC60}
+.card-body{padding:10px 12px 8px}
+.card-top{display:flex;align-items:center;gap:7px;margin-bottom:6px}
+.avatar{width:28px;height:28px;border-radius:50%;background:#ebebea;border:0.5px solid #ddd;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;color:#888;flex-shrink:0}
+.name-txt{flex:1;font-size:13px;font-weight:500;color:#1a1a1a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.badge{font-size:11px;padding:2px 7px;border-radius:3px;flex-shrink:0}
+.note-icon{background:none;border:none;cursor:pointer;padding:2px;font-size:12px}
+.card-bot{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.hint{font-size:11px;color:#999}
+.stepper{display:flex;align-items:center}
+.sb{width:20px;height:20px;border:0.5px solid #ccc;background:#f5f5f3;cursor:pointer;color:#888;font-size:14px;display:flex;align-items:center;justify-content:center;padding:0}
+.sb:first-child{border-radius:3px 0 0 3px}
+.sb:last-child{border-radius:0 3px 3px 0}
+.sv{width:26px;height:20px;text-align:center;font-size:12px;font-weight:500;border-top:0.5px solid #ccc;border-bottom:0.5px solid #ccc;display:flex;align-items:center;justify-content:center;color:#1a1a1a}
+.diff{font-size:11px;padding:1px 5px;border-radius:3px;background:#FAEEDA;color:#854F0B}
+.btns{flex:1;display:flex;justify-content:flex-end;gap:3px}
+.tbtn{padding:3px 8px;font-size:11px;border-radius:4px;cursor:pointer;border:0.5px solid #ddd;background:transparent;color:#bbb;font-family:inherit;transition:all .1s}
+.tbtn.arr{background:#E1F5EE;color:#0F6E56;border-color:#5DCAA5;font-weight:500}
+.tbtn.lat{background:#FEEDE8;color:#993C1D;border-color:#F5C4B3;font-weight:500}
+.tbtn.abs{background:#FFFBE8;color:#7A6000;border-color:#F0CC60;font-weight:500}
+.note-row{border-top:0.5px solid rgba(0,0,0,.06);padding:7px 12px}
+.note-row input{width:100%;padding:5px 9px;font-size:12px;border:0.5px solid #ddd;border-radius:7px;background:#f9f9f8;color:#1a1a1a;font-family:inherit;outline:none}
+
+.checkin-actions{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:0.5px solid #eee;padding:10px 14px 16px}
+.checkin-actions-inner{max-width:560px;margin:0 auto;display:flex;gap:8px}
+.btn-end-assembly{flex:1;padding:13px;border-radius:10px;border:0.5px solid #1D9E75;background:#E1F5EE;color:#0F6E56;font-size:14px;font-weight:500;font-family:inherit;cursor:pointer}
+.btn-add-walkin{padding:13px 16px;border-radius:10px;border:0.5px dashed #ccc;background:transparent;color:#888;font-size:13px;font-family:inherit;cursor:pointer}
+
+/* ── SECTIONS (summary view inside checkin) ── */
+.section{border-radius:10px;padding:10px 12px 4px;margin-bottom:8px;background:#fff;border:0.5px solid #eee}
+.sec-head{display:flex;align-items:center;margin-bottom:4px}
+.sec-title{font-size:12px;font-weight:500;flex:1}
+.sec-count{font-size:12px;color:#888}
+.sum-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:0.5px solid #eee}
+.sum-row:last-child{border-bottom:none}
+.sum-name{flex:1;font-size:13px;color:#1a1a1a}
+.sum-ppl{font-size:12px;color:#888}
+.sum-note{font-size:11px;color:#aaa;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ── ASSEMBLY SUMMARY (集合汇总) ── */
+#screen-summary{background:#f5f5f3}
+.summary-hero{background:#1a1a1a;color:#fff;padding:20px 14px 18px}
+.summary-hero-name{font-size:13px;opacity:.6;margin-bottom:4px}
+.summary-hero-title{font-size:18px;font-weight:600;margin-bottom:10px}
+.summary-hero-stats{display:flex;gap:20px}
+.hero-stat-n{font-size:26px;font-weight:600;line-height:1}
+.hero-stat-l{font-size:11px;opacity:.6;margin-top:2px}
+.summary-body{flex:1;overflow-y:auto;padding:12px 14px 100px;max-width:560px;margin:0 auto;width:100%}
+.copy-box{background:#fff;border:0.5px solid #e0e0de;border-radius:12px;padding:14px;margin-bottom:10px}
+.copy-box-label{font-size:11px;color:#999;font-weight:500;letter-spacing:.04em;text-transform:uppercase;margin-bottom:8px}
+.copy-text{font-size:13px;line-height:1.9;color:#1a1a1a;white-space:pre-wrap;margin-bottom:10px}
+.copy-btn{width:100%;padding:10px;border-radius:8px;border:0.5px solid #1a1a1a;background:#1a1a1a;color:#fff;font-size:13px;font-weight:500;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:opacity .15s}
+.copy-btn:active{opacity:.8}
+.copy-btn.copied{background:#1D9E75;border-color:#1D9E75}
+.summary-actions{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:0.5px solid #eee;padding:10px 14px 16px}
+.summary-actions-inner{max-width:560px;margin:0 auto;display:flex;gap:8px}
+.btn-start-tour{flex:1;padding:15px;border-radius:10px;border:none;background:#1D9E75;color:#fff;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer}
+.btn-back-checkin{padding:15px 16px;border-radius:10px;border:0.5px solid #ddd;background:#fff;color:#888;font-size:14px;font-family:inherit;cursor:pointer}
+
+/* ── TOUR IN PROGRESS ── */
+#screen-tour{background:#fff;align-items:center;justify-content:center;text-align:center;padding:40px 24px}
+.tour-guide-name{font-size:13px;color:#999;margin-bottom:4px}
+.tour-session-name{font-size:17px;font-weight:600;color:#1a1a1a;margin-bottom:32px}
+.tour-timer-ring{width:160px;height:160px;border-radius:50%;border:3px solid #1D9E75;display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 32px;position:relative}
+.tour-timer-dot{width:10px;height:10px;border-radius:50%;background:#1D9E75;margin-bottom:8px;animation:blink 1.5s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+.tour-timer-val{font-size:42px;font-weight:300;color:#1a1a1a;letter-spacing:.02em;font-variant-numeric:tabular-nums}
+.tour-timer-lbl{font-size:12px;color:#999;margin-top:4px}
+.tour-stats-row{display:flex;gap:24px;justify-content:center;margin-bottom:36px}
+.tour-stat-n{font-size:22px;font-weight:500;line-height:1}
+.tour-stat-l{font-size:11px;color:#aaa;margin-top:2px}
+.btn-end-tour{padding:16px 48px;border-radius:12px;border:none;background:#C0392B;color:#fff;font-size:16px;font-weight:500;font-family:inherit;cursor:pointer;transition:opacity .15s}
+.btn-end-tour:active{opacity:.84}
+.btn-back-small{font-size:12px;color:#bbb;background:none;border:none;cursor:pointer;margin-top:16px;display:block;margin-left:auto;margin-right:auto}
+
+/* ── LATE ARRIVAL ON TOUR ── */
+.late-arrival-box{width:100%;max-width:360px;margin:0 auto 28px;text-align:left}
+.late-arrival-title{font-size:11px;color:#bbb;letter-spacing:.06em;text-transform:uppercase;text-align:center;margin-bottom:10px}
+.late-item{display:flex;align-items:center;gap:10px;padding:10px 14px;background:#f9f9f8;border:0.5px solid #eee;border-radius:10px;margin-bottom:6px;transition:all .2s}
+.late-item.joined{background:#ECF7F3;border-color:#9FE1CB}
+.late-item-name{flex:1;font-size:13px;font-weight:500;color:#1a1a1a}
+.late-item.joined .late-item-name{color:#0F6E56}
+.late-item-count{font-size:12px;color:#aaa;margin-right:4px}
+.late-item-time{font-size:11px;color:#1D9E75;min-width:40px;text-align:right}
+.late-item-btn{padding:5px 12px;border-radius:6px;border:0.5px solid #ddd;background:#fff;font-size:11px;font-weight:500;font-family:inherit;cursor:pointer;color:#888;white-space:nowrap;flex-shrink:0;transition:all .15s}
+.late-item-btn:active{opacity:.7}
+.late-item.joined .late-item-btn{background:#1D9E75;color:#fff;border-color:#1D9E75}
+.all-arrived-banner{background:#ECF7F3;border:0.5px solid #9FE1CB;border-radius:10px;padding:10px 14px;text-align:center;font-size:12px;color:#0F6E56;margin-top:4px}
+
+/* ── TOUR ENDED ── */
+#screen-ended{background:#1a1a1a;color:#fff;align-items:center;justify-content:center;text-align:center;padding:40px 24px}
+.ended-icon{font-size:48px;margin-bottom:16px}
+.ended-title{font-size:22px;font-weight:600;margin-bottom:6px}
+.ended-sub{font-size:13px;opacity:.6;margin-bottom:32px;line-height:1.6}
+.ended-stats{display:flex;gap:28px;justify-content:center;margin-bottom:40px}
+.ended-stat-n{font-size:28px;font-weight:500;line-height:1}
+.ended-stat-l{font-size:11px;opacity:.5;margin-top:3px}
+.ended-duration{font-size:13px;opacity:.5;margin-bottom:32px}
+
+/* ── MODAL ── */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;display:none;align-items:flex-end;justify-content:center}
+.modal-bg.open{display:flex}
+.modal-sheet{background:#fff;border-radius:16px 16px 0 0;padding:8px 18px 28px;width:100%;max-width:560px}
+.modal-handle{width:32px;height:3px;border-radius:2px;background:#ddd;margin:10px auto 18px}
+.modal-title{font-size:15px;font-weight:500;color:#1a1a1a;margin-bottom:6px}
+.modal-desc{font-size:13px;color:#888;line-height:1.6;margin-bottom:18px}
+
+/* ── PLATFORM COLORS ── */
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════
+     SCREEN: LOGIN
+════════════════════════════════════ -->
+<div id="screen-login" class="screen active">
+  <div style="font-size:56px;margin-bottom:20px">🏛</div>
+  <div class="login-title">有间博物馆</div>
+  <div class="login-sub">讲解员工作台</div>
+  <div class="login-form">
+    <input class="login-name-input" id="login-name" type="text" placeholder="请输入您的姓名" maxlength="20"
+      onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="btn-primary" onclick="doLogin()">进入工作台</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     SCREEN: DASHBOARD
+════════════════════════════════════ -->
+<div id="screen-dashboard" class="screen">
+  <div class="dash-head">
+    <div class="dash-greeting">有间博物馆</div>
+    <div class="dash-name" id="dash-name">张老师</div>
+    <div class="dash-date" id="dash-date"></div>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:0 14px 40px;max-width:560px;width:100%;margin:0 auto">
+    <div style="font-size:11px;color:#bbb;text-transform:uppercase;letter-spacing:.06em;margin:4px 0 10px">今日讲解</div>
+    <div id="sessions-list"></div>
+    <button class="add-session-btn" onclick="goTo('screen-setup')">
+      <span style="font-size:18px">＋</span> 添加新讲解任务
+    </button>
+
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     SCREEN: SETUP
+════════════════════════════════════ -->
+<div id="screen-setup" class="screen">
+  <div class="page-head">
+    <button class="back-link" onclick="goBack()">← 返回</button>
+    <div class="page-title">新建讲解任务</div>
+    <div class="page-sub">填写基本信息</div>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:0 14px 40px;max-width:560px;width:100%;margin:0 auto">
+    <div class="card-box">
+      <div class="field-label">博物馆 / 讲解地点</div>
+      <input class="field-input" id="setup-venue" type="text" placeholder="例：大英博物馆">
+
+      <div class="field-label" style="margin-top:14px">集合地点</div>
+      <input class="field-input" id="setup-location" type="text" placeholder="例：正门 Great Court">
+
+      <div class="field-label" style="margin-top:14px">集合时间</div>
+      <div class="time-row">
+        <input class="field-input" id="setup-time" type="time" value="10:00">
+        <select class="field-input" id="setup-duration">
+          <option value="1.5小时团">1.5 小时团</option>
+          <option value="2小时团" selected>2 小时团</option>
+          <option value="3小时团">3 小时团</option>
+          <option value="2&3小时拼团">2&3 小时拼团</option>
+        </select>
+      </div>
+
+      <div class="field-label" style="margin-top:4px">时段</div>
+      <div class="type-chips">
+        <button class="type-chip sel" onclick="selChip(this,'period')">上午</button>
+        <button class="type-chip" onclick="selChip(this,'period')">下午</button>
+        <button class="type-chip" onclick="selChip(this,'period')">全天</button>
+        <button class="type-chip" onclick="selChip(this,'period')">晚场</button>
+      </div>
+    </div>
+
+    <button class="btn-primary btn-green" onclick="createSession()" style="margin-top:4px">下一步：上传名单</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     SCREEN: UPLOAD
+════════════════════════════════════ -->
+<div id="screen-upload" class="screen">
+  <div class="page-head">
+    <button class="back-link" onclick="goBack()">← 返回</button>
+    <div class="page-title" id="upload-title">上传讲解名单</div>
+    <div class="page-sub" id="upload-sub">AI 自动识别客人信息</div>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:0 14px 40px;max-width:560px;width:100%;margin:0 auto">
+    <div class="card-box">
+      <div class="field-label">名单截图 / 照片</div>
+      <div class="img-drop" id="img-drop">
+        <input type="file" accept="image/*" onchange="onImgSelect(this)">
+        <img class="img-preview" id="img-preview" src="" alt="">
+        <button class="img-clear" id="img-clear" onclick="clearImg(event)">✕</button>
+        <div class="img-placeholder" id="img-placeholder">
+          <div class="img-drop-icon">📷</div>
+          <div class="img-drop-lbl">点击上传截图或拍照</div>
+        </div>
+      </div>
+      <div class="divider-or">或粘贴文字</div>
+      <textarea class="upload-textarea" id="paste-input"
+        placeholder="粘贴公司发来的名单文字&#10;例：张雨萌 美团 4人&#10;李建国 携程 2人 07900…"></textarea>
+    </div>
+
+    <div class="ai-status" id="ai-status"></div>
+    <button class="btn-ai" id="btn-ai" onclick="runAI()">识别名单</button>
+
+    <div id="confirm-area" style="display:none;margin-top:14px">
+      <div style="font-size:12px;color:#888;margin-bottom:8px" id="confirm-label"></div>
+      <div class="confirm-list" id="confirm-list"></div>
+      <button class="btn-primary btn-green" onclick="confirmRoster()">确认名单，开始点名 →</button>
+      <button class="btn-secondary" onclick="document.getElementById('confirm-area').style.display='none'">重新识别</button>
+    </div>
+
+
+    <div style="text-align:center;margin-top:14px">
+      <button style="font-size:12px;color:#ccc;background:none;border:none;cursor:pointer" onclick="useDemo()">使用示例数据 →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     SCREEN: CHECKIN
+════════════════════════════════════ -->
+<div id="screen-checkin" class="screen">
+  <div style="background:#fff;border-bottom:0.5px solid #eee;padding:14px 14px 10px;max-width:560px;margin:0 auto;width:100%">
+    <button class="back-link" style="padding:0 0 6px" onclick="goBack()">← 返回</button>
+    <div style="font-size:16px;font-weight:600" id="checkin-title">大英博物馆 · 2小时团</div>
+    <div style="font-size:12px;color:#999;margin-top:2px" id="checkin-meta">张老师 · 10:00 · 正门</div>
+  </div>
+  <div class="info-bar" style="max-width:560px;margin:0 auto;width:100%">
+    <span id="ci-time">⏰ 10:00</span>
+    <span id="ci-venue">📍 正门</span>
+    <span id="ci-guide" style="margin-left:auto;font-weight:500">👤 张老师</span>
+  </div>
+  <div class="stats" id="stats-row"></div>
+  <div class="checkin-body" id="cards"></div>
+  <div class="checkin-actions">
+    <div class="checkin-actions-inner">
+      <button class="btn-add-walkin" onclick="addWalkIn()">＋ 临时加人</button>
+      <button class="btn-end-assembly" onclick="showEndAssemblyModal()">集合结束 →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     SCREEN: ASSEMBLY SUMMARY
+════════════════════════════════════ -->
+<div id="screen-summary" class="screen">
+  <div class="summary-hero" id="summary-hero"></div>
+  <div class="summary-body">
+    <div id="summary-sections"></div>
+    <div class="copy-box">
+      <div class="copy-box-label">集合汇报文字</div>
+      <div class="copy-text" id="summary-copy-text"></div>
+      <button class="copy-btn" id="copy-btn" onclick="copyReport()">
+        <span>📋</span> 一键复制
+      </button>
+    </div>
+  </div>
+  <div class="summary-actions">
+    <div class="summary-actions-inner">
+      <button class="btn-back-checkin" onclick="goTo('screen-checkin')">← 继续点名</button>
+      <button class="btn-start-tour" onclick="startTour()">▶ 开始讲解</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     SCREEN: TOUR IN PROGRESS
+════════════════════════════════════ -->
+<div id="screen-tour" class="screen">
+  <div class="tour-guide-name" id="tour-guide-name"></div>
+  <div class="tour-session-name" id="tour-session-name"></div>
+  <div class="tour-timer-ring">
+    <div class="tour-timer-dot"></div>
+    <div class="tour-timer-val" id="tour-timer">00:00</div>
+    <div class="tour-timer-lbl">讲解计时</div>
+  </div>
+  <div class="tour-stats-row">
+    <div><div class="tour-stat-n" id="tour-arrived" style="color:#1D9E75">0</div><div class="tour-stat-l">参与人数</div></div>
+    <div><div class="tour-stat-n" id="tour-late" style="color:#C0392B">0</div><div class="tour-stat-l">迟到接待</div></div>
+    <div><div class="tour-stat-n" id="tour-cancelled" style="color:#bbb">0</div><div class="tour-stat-l">取消</div></div>
+  </div>
+  <div class="late-arrival-box" id="late-arrival-box"></div>
+  <button class="btn-end-tour" onclick="showEndTourModal()">结束讲解</button>
+  <button class="btn-back-small" onclick="goTo('screen-summary')">← 返回汇总</button>
+</div>
+
+<!-- ════════════════════════════════════
+     SCREEN: TOUR ENDED
+════════════════════════════════════ -->
+<div id="screen-ended" class="screen">
+  <div class="ended-icon">✅</div>
+  <div class="ended-title">讲解结束</div>
+  <div class="ended-sub" id="ended-sub"></div>
+  <div class="ended-duration" id="ended-duration"></div>
+  <div class="ended-stats">
+    <div><div class="ended-stat-n" id="ended-arr">0</div><div class="ended-stat-l">实到人数</div></div>
+    <div><div class="ended-stat-n" id="ended-late">0</div><div class="ended-stat-l">迟到接待</div></div>
+  </div>
+  <button class="btn-primary" style="max-width:280px" onclick="goTo('screen-dashboard')">返回工作台</button>
+  <button class="btn-secondary" style="max-width:280px" onclick="showEndedCopy()">复制讲解汇报</button>
+  <div id="ended-copy-box" style="display:none;margin-top:14px;max-width:340px;width:100%">
+    <div class="copy-box" style="margin-bottom:0">
+      <div class="copy-text" id="ended-copy-text" style="font-size:12px"></div>
+      <button class="copy-btn" style="margin-top:10px" onclick="copyEndedReport()">📋 复制</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODALS ── -->
+<div class="modal-bg" id="modal-end-assembly">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">确认集合结束？</div>
+    <div class="modal-desc" id="modal-end-assembly-desc"></div>
+    <button class="btn-primary btn-green" onclick="endAssembly()">确认，生成集合汇总</button>
+    <button class="btn-secondary" onclick="closeModal('modal-end-assembly')">再等等</button>
+  </div>
+</div>
+
+<div class="modal-bg" id="modal-end-tour">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">确认结束讲解？</div>
+    <div class="modal-desc" id="modal-end-tour-desc">结束后将记录讲解时长并生成最终汇报。</div>
+    <button class="btn-primary btn-red" onclick="endTour()">确认结束讲解</button>
+    <button class="btn-secondary" onclick="closeModal('modal-end-tour')">继续讲解</button>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════
+// PLATFORM COLORS
+// ════════════════════════════════════
+const PLATFORMS=[
+  {bg:'#E6F1FB',c:'#185FA5',b:'#85B7EB'},
+  {bg:'#E1F5EE',c:'#0F6E56',b:'#5DCAA5'},
+  {bg:'#FAEEDA',c:'#854F0B',b:'#FAC775'},
+  {bg:'#FAECE7',c:'#993C1D',b:'#F5C4B3'},
+  {bg:'#EAF3DE',c:'#3B6D11',b:'#97C459'},
+  {bg:'#EEEDFE',c:'#534AB7',b:'#AFA9EC'},
+  {bg:'#FBEAF0',c:'#993556',b:'#ED93B1'},
+  {bg:'#F1EFE8',c:'#5F5E5A',b:'#B4B2A9'},
+];
+function platColor(n){if(!n)return null;let h=0;for(let i=0;i<n.length;i++)h=(h*31+n.charCodeAt(i))&0xffff;return PLATFORMS[h%PLATFORMS.length];}
+
+// ════════════════════════════════════
+// STATE
+// ════════════════════════════════════
+let guideName = '';
+let sessions = [];         // [{id, venue, location, time, duration, period, data:[], status:'pending'|'assembly'|'touring'|'done'}]
+let currentSessionId = null;
+let tourStartTime = null;
+let tourTimerInterval = null;
+let wc = 100;
+
+function currentSession(){ return sessions.find(s=>s.id===currentSessionId); }
+function get(id){ return currentSession().data.find(b=>b.id===id); }
+
+// ════════════════════════════════════
+// NAVIGATION
+// ════════════════════════════════════
+let history = ['screen-login'];
+
+function goTo(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  history.push(id);
+  if(id==='screen-checkin') renderCheckin();
+  if(id==='screen-dashboard') renderDashboard();
+  if(id==='screen-tour') startTourTimer();
+  if(id==='screen-summary') renderSummary();
+}
+function goBack(){
+  if(history.length<2) return;
+  history.pop();
+  const prev = history[history.length-1];
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(prev).classList.add('active');
+  if(prev==='screen-checkin') renderCheckin();
+  if(prev==='screen-dashboard') renderDashboard();
+  if(prev==='screen-summary') renderSummary();
+}
+
+// ════════════════════════════════════
+// LOGIN
+// ════════════════════════════════════
+function doLogin(){
+  const v = document.getElementById('login-name').value.trim();
+  if(!v){ document.getElementById('login-name').focus(); return; }
+  guideName = v;
+  document.getElementById('dash-name').textContent = guideName;
+  const now = new Date();
+  document.getElementById('dash-date').textContent =
+    now.toLocaleDateString('zh-CN',{year:'numeric',month:'long',day:'numeric',weekday:'long'});
+  renderDashboard();
+  goTo('screen-dashboard');
+}
+
+// ════════════════════════════════════
+// DASHBOARD
+// ════════════════════════════════════
+function renderDashboard(){
+  const el = document.getElementById('sessions-list');
+  if(!sessions.length){
+    el.innerHTML=`<div style="text-align:center;padding:30px 0;color:#ccc;font-size:13px;line-height:2">暂无任务<br>点击下方按钮添加今日讲解</div>`;
+    return;
+  }
+  el.innerHTML = sessions.map(s=>{
+    const arr = s.data.filter(b=>b.st==='arrived').reduce((a,b)=>a+(b.ac||b.bk),0);
+    const tot = s.data.reduce((a,b)=>a+b.bk,0);
+    const pct = tot ? Math.round(arr/tot*100) : 0;
+    const statusMap = {pending:'待点名',assembly:'点名中',touring:'讲解中',done:'已结束'};
+    const statusCls = s.status==='touring'?'active':s.status==='done'?'done':'pending';
+    return `<div class="session-card" onclick="openSession('${s.id}')">
+      <div class="sc-status ${statusCls}">${statusMap[s.status]||'待点名'}</div>
+      <div class="sc-time"><span class="sc-time-badge">${s.time}</span>${s.period} · ${s.duration}</div>
+      <div class="sc-name">${s.venue}</div>
+      <div class="sc-meta"><span>📍 ${s.location}</span><span>👤 ${guideName}</span>${tot?`<span>${tot}人</span>`:''}</div>
+      ${tot?`<div class="sc-progress"><div class="sc-progress-fill" style="width:${pct}%"></div></div>`:''}
+    </div>`;
+  }).join('');
+}
+
+function openSession(id){
+  currentSessionId = id;
+  const s = currentSession();
+  if(!s.data.length){ goTo('screen-upload'); }
+  else if(s.status==='touring'){ goTo('screen-tour'); }
+  else if(s.status==='assembly'){ goTo('screen-checkin'); }
+  else if(s.status==='done'){ goTo('screen-ended'); }
+  else { goTo('screen-checkin'); }
+}
+
+// ════════════════════════════════════
+// SETUP
+// ════════════════════════════════════
+function selChip(el, group){
+  el.closest('.type-chips').querySelectorAll('.type-chip').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+function createSession(){
+  const venue = document.getElementById('setup-venue').value.trim() || '大英博物馆';
+  const location = document.getElementById('setup-location').value.trim() || '正门';
+  const time = document.getElementById('setup-time').value || '10:00';
+  const duration = document.getElementById('setup-duration').value;
+  const period = document.querySelector('#screen-setup .type-chip.sel')?.textContent || '上午';
+  const s = { id:'s'+Date.now(), venue, location, time, duration, period, data:[], status:'pending' };
+  sessions.push(s);
+  currentSessionId = s.id;
+  // populate upload header
+  document.getElementById('upload-title').textContent = venue;
+  document.getElementById('upload-sub').textContent = `${time} · ${period} ${duration} · ${guideName}`;
+  goTo('screen-upload');
+}
+
+// ════════════════════════════════════
+// IMAGE + AI UPLOAD
+// ════════════════════════════════════
+let imgBase64=null, imgMediaType=null;
+
+function onImgSelect(input){
+  const file=input.files[0]; if(!file) return;
+  imgMediaType=file.type||'image/jpeg';
+  const r=new FileReader();
+  r.onload=e=>{
+    imgBase64=e.target.result.split(',')[1];
+    document.getElementById('img-preview').src=e.target.result;
+    document.getElementById('img-preview').style.display='block';
+    document.getElementById('img-placeholder').style.display='none';
+    document.getElementById('img-clear').style.display='flex';
+  };
+  r.readAsDataURL(file);
+}
+function clearImg(e){
+  e.stopPropagation();
+  imgBase64=null;imgMediaType=null;
+  document.getElementById('img-preview').style.display='none';
+  document.getElementById('img-placeholder').style.display='flex';
+  document.getElementById('img-clear').style.display='none';
+}
+
+async function runAI(){
+  const text=document.getElementById('paste-input').value.trim();
+  if(!imgBase64&&!text){alert('请上传名单图片或粘贴文字');return;}
+  const btn=document.getElementById('btn-ai');
+  const status=document.getElementById('ai-status');
+  btn.disabled=true; status.textContent='✦ 正在识别名单…';
+  document.getElementById('confirm-area').style.display='none';
+  let parsed;
+  try{
+    const parts=[];
+    if(imgBase64) parts.push({type:'image',source:{type:'base64',media_type:imgMediaType,data:imgBase64}});
+    parts.push({type:'text',text:`从讲解名单中提取所有客人组，只返回JSON数组，格式：[{"name":"姓名","plat":"平台（没有则省略）","bk":人数,"phone":"电话（没有则省略）","note":"备注（没有则省略）"}]${text?'\n名单：\n'+text:''}`});
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':'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','anthropic-version':'2023-06-01'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:parts}]})});
+    if(!res.ok) throw new Error();
+    const d=await res.json();
+    parsed=JSON.parse((d.content?.[0]?.text||'').replace(/```json|```/g,'').trim());
+    window._aiUsed=true;
+  }catch(e){
+    parsed=text.split('\n').filter(l=>l.trim()).map((line,i)=>{
+      const nm=line.match(/(\d+)\s*人/);
+      const parts=line.split(/[\s,，]+/);
+      return{name:parts[0]||`客人${i+1}`,plat:parts.find(p=>['携程','美团','飞猪','Viator','直课','小红书'].some(k=>p.includes(k)))||'',bk:nm?parseInt(nm[1]):1};
+    }).filter(r=>r.name);
+  }
+  // normalise
+  const roster=parsed.map((r,i)=>({id:'r'+i,name:r.name||`客人${i+1}`,plat:r.plat||'',bk:Math.max(1,parseInt(r.bk)||1),ac:Math.max(1,parseInt(r.bk)||1),st:'pending',note:r.note||'',no:false,wi:false}));
+  showConfirm(roster);
+  const aiUsed = !!window._aiUsed;
+  status.textContent=`✓ 识别完成，共 ${roster.length} 组${aiUsed?'（AI识别）':'（本地解析）'}`;
+  window._aiUsed=false;
+  btn.disabled=false;
+}
+
+function showConfirm(roster){
+  document.getElementById('confirm-label').textContent=`识别出 ${roster.length} 组，共 ${roster.reduce((s,r)=>s+r.bk,0)} 人 — 请确认`;
+  document.getElementById('confirm-list').innerHTML=roster.map(b=>{
+    const p=platColor(b.plat);
+    return `<div class="confirm-row">
+      <div class="avatar">${b.name.charAt(0)}</div>
+      <div class="cr-name">${b.name}</div>
+      ${b.plat&&p?`<span class="badge" style="background:${p.bg};color:${p.c};border:0.5px solid ${p.b}">${b.plat}</span>`:''}
+      <div class="cr-count">${b.bk}人</div>
+    </div>`;
+  }).join('');
+  document.getElementById('confirm-area').style.display='block';
+  // save temporarily for confirmRoster
+  window._pendingRoster=roster;
+}
+
+function confirmRoster(){
+  const s=currentSession(); if(!s) return;
+  s.data=window._pendingRoster||[];
+  s.status='assembly';
+  setupCheckinHeader(s);
+  goTo('screen-checkin');
+}
+
+function useDemo(){
+  const demo=[
+    {id:'d0',name:'张雨萌',plat:'美团',bk:4,ac:4,st:'arrived',note:'',no:false,wi:false},
+    {id:'d1',name:'李建国',plat:'携程',bk:2,ac:2,st:'arrived',note:'',no:false,wi:false},
+    {id:'d2',name:'王芳老师',plat:'',bk:1,ac:1,st:'arrived',note:'VIP',no:false,wi:false},
+    {id:'d3',name:'陈思思',plat:'小红书',bk:3,ac:2,st:'late',note:'还在路上',no:false,wi:false},
+    {id:'d4',name:'Mike Johnson',plat:'Viator',bk:2,ac:2,st:'pending',note:'',no:false,wi:false},
+    {id:'d5',name:'刘浩然',plat:'美团',bk:5,ac:5,st:'pending',note:'',no:false,wi:false},
+    {id:'d6',name:'赵晓燕',plat:'携程',bk:2,ac:0,st:'absent',note:'联系不上',no:false,wi:false},
+  ];
+  const s=currentSession(); if(!s) return;
+  s.data=JSON.parse(JSON.stringify(demo));
+  s.status='assembly';
+  setupCheckinHeader(s);
+  goTo('screen-checkin');
+}
+
+// ════════════════════════════════════
+// CHECK-IN
+// ════════════════════════════════════
+function setupCheckinHeader(s){
+  document.getElementById('checkin-title').textContent=`${s.venue} · ${s.duration}`;
+  document.getElementById('checkin-meta').textContent=`${guideName} · ${s.time} · ${s.location}`;
+  document.getElementById('ci-time').textContent=`⏰ ${s.time}`;
+  document.getElementById('ci-venue').textContent=`📍 ${s.location}`;
+  document.getElementById('ci-guide').textContent=`👤 ${guideName}`;
+}
+
+function renderCheckin(){
+  const s=currentSession(); if(!s) return;
+  setupCheckinHeader(s);
+  const data=s.data;
+  const tot=data.reduce((a,b)=>a+b.bk,0);
+  const arr=data.filter(b=>b.st==='arrived').reduce((a,b)=>a+(b.ac||b.bk),0);
+  const lat=data.filter(b=>b.st==='late').reduce((a,b)=>a+b.bk,0);
+  const pen=data.filter(b=>b.st==='pending').length;
+  document.getElementById('stats-row').innerHTML=`
+    <div class="stat"><div class="stat-n" style="color:#1a1a1a">${tot}</div><div class="stat-l">总预订</div></div>
+    <div class="stat"><div class="stat-n" style="color:#0F6E56">${arr}</div><div class="stat-l">已到</div></div>
+    <div class="stat"><div class="stat-n" style="color:#C0392B">${lat}</div><div class="stat-l">迟到</div></div>
+    <div class="stat"><div class="stat-n" style="color:#aaa">${pen}组</div><div class="stat-l">待确认</div></div>
+  `;
+  const cc=document.getElementById('cards'); cc.innerHTML='';
+  data.forEach(b=>{
+    const p=platColor(b.plat); const d=b.ac-b.bk;
+    const el=document.createElement('div');
+    el.className=`card st-${b.st}`;
+    el.innerHTML=`<div class="card-body">
+      <div class="card-top">
+        <div class="avatar">${b.name.charAt(0)}</div>
+        <span class="name-txt">${b.name}</span>
+        ${b.plat&&p?`<span class="badge" style="background:${p.bg};color:${p.c};border:0.5px solid ${p.b}">${b.plat}</span>`:''}
+        <button class="note-icon" style="color:${b.note?'#185FA5':'#ccc'}" onclick="tNote('${b.id}')">✏</button>
+        ${b.wi?`<button style="background:none;border:none;cursor:pointer;font-size:12px;color:#ccc" onclick="delB('${b.id}')">✕</button>`:''}
+      </div>
+      <div class="card-bot">
+        <span class="hint">预订${b.bk}人 → 实到</span>
+        <div class="stepper"><button class="sb" onclick="chAc('${b.id}',-1)">−</button><span class="sv">${b.ac}</span><button class="sb" onclick="chAc('${b.id}',1)">+</button></div>
+        <span class="hint">人</span>
+        ${d!==0?`<span class="diff">${d>0?'+'+d:'−'+Math.abs(d)}</span>`:''}
+        <div class="btns">
+          <button class="tbtn ${b.st==='arrived'?'arr':''}" onclick="setSt('${b.id}','arrived')">✓ 已到</button>
+          <button class="tbtn ${b.st==='late'?'lat':''}" onclick="setSt('${b.id}','late')">迟到</button>
+          <button class="tbtn ${b.st==='absent'?'abs':''}" onclick="setSt('${b.id}','absent')">取消</button>
+        </div>
+      </div>
+    </div>
+    ${b.no?`<div class="note-row"><input value="${b.note}" placeholder="备注…" oninput="setNote('${b.id}',this.value)"></div>`:''}`;
+    cc.appendChild(el);
+  });
+}
+
+function setSt(id,s){const b=get(id);if(b){b.st=b.st===s?'pending':s;}renderCheckin();}
+function chAc(id,d){const b=get(id);if(b)b.ac=Math.max(0,b.ac+d);renderCheckin();}
+function tNote(id){const b=get(id);if(b)b.no=!b.no;renderCheckin();}
+function setNote(id,v){const b=get(id);if(b)b.note=v;}
+function delB(id){const s=currentSession();s.data=s.data.filter(b=>b.id!==id);renderCheckin();}
+function addWalkIn(){
+  const s=currentSession();
+  s.data.push({id:'w'+wc++,name:'临时客人',plat:'',bk:1,ac:1,st:'pending',note:'',no:false,wi:true});
+  renderCheckin();
+}
+
+// ════════════════════════════════════
+// END ASSEMBLY
+// ════════════════════════════════════
+function showEndAssemblyModal(){
+  const s=currentSession();
+  const pen=s.data.filter(b=>b.st==='pending');
+  const desc=document.getElementById('modal-end-assembly-desc');
+  if(pen.length){
+    const ppl=pen.reduce((a,b)=>a+b.bk,0);
+    desc.textContent=`还有 ${pen.length} 组（${ppl} 人）未处理，集合结束后将自动标为迟到。`;
+  } else {
+    desc.textContent='所有客人均已处理，确认集合结束？';
+  }
+  document.getElementById('modal-end-assembly').classList.add('open');
+}
+
+function endAssembly(){
+  const s=currentSession();
+  s.data.forEach(b=>{ if(b.st==='pending') b.st='late'; });
+  s.status='assembly';
+  closeModal('modal-end-assembly');
+  goTo('screen-summary');
+}
+
+// ════════════════════════════════════
+// ASSEMBLY SUMMARY
+// ════════════════════════════════════
+function renderSummary(){
+  const s=currentSession(); if(!s) return;
+  const data=s.data;
+  const tot=data.reduce((a,b)=>a+b.bk,0);
+  const arr=data.filter(b=>b.st==='arrived').reduce((a,b)=>a+(b.ac||b.bk),0);
+  const lat=data.filter(b=>b.st==='late').reduce((a,b)=>a+b.bk,0);
+  const abs=data.filter(b=>b.st==='absent').reduce((a,b)=>a+b.bk,0);
+
+  document.getElementById('summary-hero').innerHTML=`
+    <div class="summary-hero-name">${guideName} · ${s.time} ${s.period}</div>
+    <div class="summary-hero-title">${s.venue}</div>
+    <div class="summary-hero-stats">
+      <div><div class="hero-stat-n">${tot}</div><div class="hero-stat-l">总预订</div></div>
+      <div><div class="hero-stat-n" style="color:#52D68A">${arr}</div><div class="hero-stat-l">已到</div></div>
+      <div><div class="hero-stat-n" style="color:#FF8A80">${lat}</div><div class="hero-stat-l">迟到</div></div>
+      <div><div class="hero-stat-n" style="color:#FFD740">${abs}</div><div class="hero-stat-l">取消</div></div>
+    </div>
+  `;
+
+  let sectionsHtml='';
+  const rSec=(items,title,tc,lc,bc,fn)=>{
+    if(!items.length) return '';
+    const t=items.reduce((a,b)=>a+fn(b),0);
+    const rows=items.map((b,i)=>{
+      const p=platColor(b.plat);
+      return `<div class="sum-row"${i===items.length-1?' style="border-bottom:none"':''}>
+        <div class="avatar" style="width:24px;height:24px;font-size:9px">${b.name.charAt(0)}</div>
+        <span class="sum-name">${b.name}</span>
+        ${b.plat&&p?`<span class="badge" style="font-size:11px;padding:1px 6px;background:${p.bg};color:${p.c};border:0.5px solid ${p.b}">${b.plat}</span>`:''}
+        <span class="sum-ppl">${fn(b)}人</span>
+        ${b.note?`<span class="sum-note">${b.note}</span>`:''}
+      </div>`;
+    }).join('');
+    return `<div class="section" style="border-color:${bc};border-left:3px solid ${lc}">
+      <div class="sec-head"><span class="sec-title" style="color:${tc}">${title}</span><span class="sec-count">${t}人 · ${items.length}组</span></div>
+      ${rows}
+    </div>`;
+  };
+  sectionsHtml+=rSec(data.filter(b=>b.st==='arrived'),'已到','#0F6E56','#1D9E75','#9FE1CB',b=>b.ac||b.bk);
+  sectionsHtml+=rSec(data.filter(b=>b.st==='late'),'迟到','#993C1D','#D85A30','#F5C4B3',b=>b.bk);
+  sectionsHtml+=rSec(data.filter(b=>b.st==='absent'),'取消','#7A6000','#C9A800','#F0CC60',b=>b.bk);
+  document.getElementById('summary-sections').innerHTML=sectionsHtml;
+
+  // copy text
+  const now=new Date();
+  const hm=`${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+  const latGroups=data.filter(b=>b.st==='late');
+  const absGroups=data.filter(b=>b.st==='absent');
+  let txt=`【${s.venue}集合点名汇报】\n`;
+  txt+=`${guideName} · ${s.time} ${s.period} ${s.duration}\n`;
+  txt+=`📍 ${s.location} · 汇报时间 ${hm}\n\n`;
+  txt+=`预订 ${tot} 人，实到 ${arr} 人`;
+  if(lat) txt+=`，迟到 ${lat} 人`;
+  if(abs) txt+=`，取消 ${abs} 人`;
+  if(latGroups.length) txt+=`\n\n迟到：${latGroups.map(b=>b.name+(b.note?'（'+b.note+'）':'')).join('、')}`;
+  if(absGroups.length) txt+=`\n取消：${absGroups.map(b=>b.name+(b.note?'（'+b.note+'）':'')).join('、')}`;
+  document.getElementById('summary-copy-text').textContent=txt;
+  window._summaryText=txt;
+
+  // update tour stats preview
+  document.getElementById('tour-arrived').textContent=arr;
+  document.getElementById('tour-late').textContent=lat;
+  document.getElementById('tour-cancelled').textContent=abs;
+}
+
+async function copyReport(){
+  const text=document.getElementById('summary-copy-text').textContent;
+  try{ await navigator.clipboard.writeText(text); }catch(e){ /* fallback */ }
+  const btn=document.getElementById('copy-btn');
+  btn.classList.add('copied'); btn.innerHTML='<span>✓</span> 已复制';
+  setTimeout(()=>{ btn.classList.remove('copied'); btn.innerHTML='<span>📋</span> 一键复制'; },2000);
+}
+
+// ════════════════════════════════════
+// TOUR TIMER
+// ════════════════════════════════════
+function startTour(){
+  const s=currentSession(); if(!s) return;
+  s.status='touring';
+  tourStartTime=Date.now();
+  // init late arrival tracking
+  s.data.forEach(b=>{ if(b.st==='late') b.joinedTour=false; });
+  s.allArrivedTime=null;
+  document.getElementById('tour-guide-name').textContent=guideName;
+  document.getElementById('tour-session-name').textContent=`${s.venue} · ${s.time} ${s.period}`;
+  goTo('screen-tour');
+}
+
+function renderLateArrival(){
+  const s=currentSession(); if(!s) return;
+  const lateItems=s.data.filter(b=>b.st==='late');
+  const box=document.getElementById('late-arrival-box');
+  if(!box) return;
+  if(!lateItems.length){ box.innerHTML=''; return; }
+  const allJoined=lateItems.every(b=>b.joinedTour);
+  const now=()=>{const d=new Date();return d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');};
+  box.innerHTML=`
+    <div class="late-arrival-title">迟到客人跟进</div>
+    ${lateItems.map(b=>`
+    <div class="late-item ${b.joinedTour?'joined':''}" id="li-${b.id}">
+      <div class="late-item-name">${b.name}</div>
+      <div class="late-item-count">${b.bk}人</div>
+      ${b.joinedTour
+        ?`<div class="late-item-time">${b.joinTime}</div><button class="late-item-btn" onclick="unjoinLate('${b.id}')">撤销</button>`
+        :`<button class="late-item-btn" onclick="joinLate('${b.id}')">已到队伍</button>`
+      }
+    </div>`).join('')}
+    ${allJoined&&s.allArrivedTime
+      ?`<div class="all-arrived-banner">✓ 全员到齐 · ${s.allArrivedTime}</div>`
+      :''}
+  `;
+}
+
+function joinLate(id){
+  const s=currentSession(); if(!s) return;
+  const b=s.data.find(x=>x.id===id); if(!b) return;
+  const d=new Date();
+  b.joinedTour=true;
+  b.joinTime=d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');
+  // check if all joined
+  const lateItems=s.data.filter(x=>x.st==='late');
+  if(lateItems.every(x=>x.joinedTour) && !s.allArrivedTime){
+    s.allArrivedTime=b.joinTime;
+  }
+  renderLateArrival();
+}
+
+function unjoinLate(id){
+  const s=currentSession(); if(!s) return;
+  const b=s.data.find(x=>x.id===id); if(!b) return;
+  b.joinedTour=false; b.joinTime=null;
+  s.allArrivedTime=null;
+  renderLateArrival();
+}
+
+function startTourTimer(){
+  if(tourTimerInterval) clearInterval(tourTimerInterval);
+  renderLateArrival();
+  tourTimerInterval=setInterval(()=>{
+    if(!tourStartTime) return;
+    const elapsed=Math.floor((Date.now()-tourStartTime)/1000);
+    const h=Math.floor(elapsed/3600);
+    const m=Math.floor((elapsed%3600)/60);
+    const sec=elapsed%60;
+    const display=h>0
+      ?`${h}:${m.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}`
+      :`${m.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}`;
+    document.getElementById('tour-timer').textContent=display;
+  },1000);
+}
+
+function showEndTourModal(){
+  if(!tourStartTime) return;
+  const elapsed=Math.floor((Date.now()-tourStartTime)/1000);
+  const m=Math.floor(elapsed/60); const h=Math.floor(m/60);
+  const durStr=h>0?`${h}小时${m%60}分钟`:`${m}分钟`;
+  document.getElementById('modal-end-tour-desc').textContent=`已讲解 ${durStr}，确认结束？`;
+  document.getElementById('modal-end-tour').classList.add('open');
+}
+
+function endTour(){
+  clearInterval(tourTimerInterval);
+  const s=currentSession(); if(!s) return;
+  s.status='done';
+  const elapsed=Math.floor((Date.now()-tourStartTime)/1000);
+  const m=Math.floor(elapsed/60); const h=Math.floor(m/60);
+  const durStr=h>0?`${h}小时${m%60}分钟`:`${m}分钟`;
+  closeModal('modal-end-tour');
+
+  // populate ended screen
+  const data=s.data;
+  const arr=data.filter(b=>b.st==='arrived').reduce((a,b)=>a+(b.ac||b.bk),0);
+  const lat=data.filter(b=>b.st==='late').reduce((a,b)=>a+b.bk,0);
+  document.getElementById('ended-sub').textContent=`${guideName} · ${s.venue}`;
+  document.getElementById('ended-duration').textContent=`讲解时长：${durStr}`;
+  document.getElementById('ended-arr').textContent=arr;
+  document.getElementById('ended-late').textContent=lat;
+
+  const now=new Date();
+  const hm=`${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+  let rpt=`【${s.venue}讲解结束汇报】\n${guideName} · ${s.time} ${s.period}\n`;
+  rpt+=`讲解时长：${durStr}，结束时间：${hm}\n`;
+  rpt+=`实到 ${arr} 人，迟到接待 ${lat} 人`;
+  document.getElementById('ended-copy-text').textContent=rpt;
+  window._endedReport=rpt;
+
+  goTo('screen-ended');
+}
+
+function showEndedCopy(){
+  const el=document.getElementById('ended-copy-box');
+  el.style.display=el.style.display==='none'?'block':'none';
+}
+
+async function copyEndedReport(){
+  try{ await navigator.clipboard.writeText(window._endedReport||''); }catch(e){}
+  const btn=event.target.closest('.copy-btn');
+  btn.textContent='✓ 已复制';
+  setTimeout(()=>btn.textContent='📋 复制',2000);
+}
+
+// ════════════════════════════════════
+// MODAL
+// ════════════════════════════════════
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-bg').forEach(m=>{
+  m.addEventListener('click',e=>{ if(e.target===m) m.classList.remove('open'); });
+});
+
+// ════════════════════════════════════
+// INIT
+// ════════════════════════════════════
+document.getElementById('login-name').focus();
+</script>
+</body>
+</html>
